@@ -167,6 +167,7 @@ fn snippet_offsets_are_correct() {
 // Linked registration: no loadable extension, as a Rust program would use it.
 // ---------------------------------------------------------------------------
 
+#[cfg(feature = "link")]
 #[test]
 fn register_on_connection_works_without_loading_an_extension() {
     let conn = Connection::open_in_memory().unwrap();
@@ -180,6 +181,7 @@ fn register_on_connection_works_without_loading_an_extension() {
     assert_eq!(count(&conn, "中华"), 1);
 }
 
+#[cfg(feature = "link")]
 #[test]
 fn registration_is_per_connection() {
     let a = Connection::open_in_memory().unwrap();
@@ -198,15 +200,9 @@ fn registration_is_per_connection() {
 
 use fts5jieba::rank::{plan, rerank, Candidate, Weights};
 
-fn linked() -> Connection {
-    let conn = Connection::open_in_memory().unwrap();
-    unsafe { fts5jieba::register_on_connection(conn.handle().cast()) }.unwrap();
-    conn
-}
-
 #[test]
 fn planner_finds_scattered_words_that_a_single_phrase_misses() {
-    let conn = linked();
+    let conn = open();
     conn.execute_batch(
         "CREATE VIRTUAL TABLE docs USING fts5(body, tokenize='jieba');
          INSERT INTO docs(body) VALUES ('we deploy the site to netlify nightly');",
@@ -226,7 +222,7 @@ fn planner_finds_scattered_words_that_a_single_phrase_misses() {
 
 #[test]
 fn planner_handles_mixed_chinese_and_english() {
-    let conn = linked();
+    let conn = open();
     conn.execute_batch(
         "CREATE VIRTUAL TABLE docs USING fts5(body, tokenize='jieba');
          INSERT INTO docs(body) VALUES ('把站点部署到 Netlify 上');
@@ -238,7 +234,7 @@ fn planner_handles_mixed_chinese_and_english() {
 
 #[test]
 fn fts5_syntax_survives_planning() {
-    let conn = linked();
+    let conn = open();
     conn.execute_batch(
         "CREATE VIRTUAL TABLE docs USING fts5(body, tokenize='jieba');
          INSERT INTO docs(body) VALUES ('alpha'), ('beta'), ('gamma');",
@@ -250,7 +246,7 @@ fn fts5_syntax_survives_planning() {
 
 #[test]
 fn column_weights_let_a_title_hit_outrank_a_body_hit() {
-    let conn = linked();
+    let conn = open();
     conn.execute_batch(
         "CREATE VIRTUAL TABLE docs USING fts5(title, body, tokenize='jieba');
          INSERT INTO docs(title, body) VALUES ('release notes', 'misc text about other things');
@@ -270,7 +266,7 @@ fn column_weights_let_a_title_hit_outrank_a_body_hit() {
 
 #[test]
 fn recency_rerank_promotes_a_fresher_document_over_real_bm25_scores() {
-    let conn = linked();
+    let conn = open();
     conn.execute_batch(
         "CREATE VIRTUAL TABLE docs USING fts5(body, tokenize='jieba');
          CREATE TABLE meta(id INTEGER PRIMARY KEY, age_days REAL);

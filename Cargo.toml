@@ -19,6 +19,12 @@ name = "fts5jieba"
 # an index by hand.
 crate-type = ["cdylib", "rlib"]
 
+[features]
+# Builds `register_on_connection`, which calls SQLite's own symbols and so needs them at
+# link time. A program that links SQLite wants this. The loadable extension does not, and
+# on Windows a cdylib with unresolved externals fails to link, so it is off by default.
+link = []
+
 [dependencies]
 libc = "0.2"
 jieba-rs = "=0.7.0"

@@ -18,6 +18,11 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
+      - name: Linked registration (needs SQLite symbols at link time)
+        if: runner.os != 'Windows'
+        run: |
+          cargo clippy --all-targets --features link -- -D warnings
+          cargo test --features link
   msrv:
     runs-on: ubuntu-latest
     steps:

@@ -8,7 +8,8 @@
 //! - **Loadable extension.** Build the `cdylib` and `.load` it. Two entry points are
 //!   exported so any host can load by filename: `sqlite3_extension_init` (the default)
 //!   and `sqlite3_fts5jieba_init` (explicit, for `load_extension(f, 'sqlite3_fts5jieba_init')`).
-//! - **Linked into a Rust program.** Call [`register_on_connection`] on each connection.
+//! - **Linked into a Rust program.** Enable the `link` feature and call
+//!   `register_on_connection` on each connection.
 //!
 //! [`rank`] holds the query-side helpers that sit on top of FTS5's `bm25()`: a query
 //! planner and a recency-aware re-ranker.
@@ -163,6 +164,8 @@ pub extern "C" fn sqlite3_fts5jieba_init(
 
 /// Register the tokenizer on a raw `sqlite3*`, without a loadable extension.
 ///
+/// Available with the `link` feature.
+///
 /// This is the path the server uses. It calls SQLite's own symbols rather than going
 /// through a `sqlite3_api_routines` table, because that table is what an *extension
 /// loader* supplies and there is no loader here — the tokenizer is linked into the
@@ -177,6 +180,7 @@ pub extern "C" fn sqlite3_fts5jieba_init(
 ///
 /// `db` must be a live `sqlite3*`. The registration lasts as long as that connection, so
 /// this must be called once per connection before any query naming `tokenize = 'jieba'`.
+#[cfg(feature = "link")]
 pub unsafe fn register_on_connection(db: *mut Sqlite3) -> Result<(), c_int> {
     extern "C" {
         fn sqlite3_prepare_v2(
