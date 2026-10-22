@@ -6,4 +6,5 @@
 - FTS5 takes **byte** offsets into the original text. Any change to segmentation needs a test that checks offsets through `snippet()`, not only the token list.
 - An index built with one tokenizer and queried with another silently returns nothing. Never add a fallback tokenizer; let registration failure be an error.
 - `rank` stays pure: no database access, no clock, no I/O. Callers pass ages in days.
-- Before committing, run `cargo fmt`, `cargo clippy --all-targets -- -D warnings` and `cargo test`.
+- Before committing, run `cargo fmt`, `cargo clippy --all-targets -- -D warnings` and `cargo test`, then the same with `--features link`.
+- Anything that references SQLite symbols directly (not through the routines table) must stay behind the `link` feature, or the Windows build breaks.

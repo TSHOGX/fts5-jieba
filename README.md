@@ -44,7 +44,7 @@ Loading gotchas on macOS:
 
 ```toml
 [dependencies]
-fts5-jieba = { git = "https://github.com/TSHOGX/fts5-jieba" }
+fts5-jieba = { git = "https://github.com/TSHOGX/fts5-jieba", features = ["link"] }
 ```
 
 ```rust
@@ -52,7 +52,7 @@ fts5-jieba = { git = "https://github.com/TSHOGX/fts5-jieba" }
 unsafe { fts5jieba::register_on_connection(conn.handle().cast()) }?;
 ```
 
-This calls SQLite's own symbols instead of going through an extension loader's routines table, so there is no file to locate at runtime. It is worth preferring when you control the binary: an index built with one tokenizer and queried with another silently returns nothing, so a missing loadable extension would make a program answer *wrongly* rather than merely worse. With linking, a registration failure is an error you can make fatal.
+This calls SQLite's own symbols instead of going through an extension loader's routines table, so there is no file to locate at runtime. That is why it sits behind the off-by-default `link` feature: those symbols must resolve at link time, which a plain loadable extension should not require (a Windows `cdylib` with unresolved externals fails to link). It is worth preferring when you control the binary: an index built with one tokenizer and queried with another silently returns nothing, so a missing loadable extension would make a program answer *wrongly* rather than merely worse. With linking, a registration failure is an error you can make fatal.
 
 The jieba dictionary takes about 600 ms to build, and FTS5 creates a tokenizer per table per connection. The engine is therefore built once per process (one for stemming, one without) and shared, which is safe because it is immutable after construction.
 
@@ -89,7 +89,7 @@ Note that FTS5 auxiliary functions such as `bm25()` cannot be used inside an agg
 
 ## Platforms
 
-Tested on macOS (arm64) locally, and on Linux and macOS in CI. The minimum supported Rust version is 1.82, also checked in CI. Windows is untested: a `cdylib` there must resolve every SQLite symbol at link time, which this crate does not currently arrange.
+CI builds and tests on Linux, macOS and Windows, and on the minimum supported Rust version, 1.82. The `link` feature is tested on Linux and macOS; on Windows only the loadable extension is built and tested, and the cross-host smoke script has only been run on macOS.
 
 ## Tests
 
